@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Home</title>
+    <meta charset="UTF-8">
+</head>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fire Fighter</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <style>
+        #mapid { height: 100vh; width: 100%; }
+    </style>
+</head>
+<body>
+    <div id="mapid"></div>
+    <script>
+        var mymap = L.map('mapid').setView([45.75647670543468, 4.866953950030793], 13);
+        var markerfires = L.layerGroup();
+        var markerfacility = L.layerGroup();
+        var markervehicules =L.layerGroup();
+
+        mymap.addLayer(markerfires);  
+        mymap.addLayer(markerfacility);  
+        mymap.addLayer(markervehicules);  
+
+        var fireIcon = L.icon({iconUrl: '/Static/src/main/resources/image/jeu.png',
+
+        iconSize:     [30, 30], // size of the icon
+        popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+    });
+
+        var facilityicon = L.icon({iconUrl: '/Static/src/main/resources/image/facility.png',
+
+    iconSize:     [30, 30], // size of the icon
+    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+    });
+
+    var vehiculeicon = L.icon({iconUrl: '/Static/src/main/resources/image/vehicule.png',
+
+    iconSize:     [30, 30], // size of the icon
+    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+    });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(mymap);
+              
+
+        
+        
+
+        function update_fires(){
+            markerfires.clearLayers();
+            fetch('http://vps.cpe-sn.fr:8081/fires')
+            .then(response => response.json())
+            .then(data => {
+            //Faites quelque chose avec les données retournées par l'API
+            for (var i = 0; i < data.length; i++) {
+                    L.marker([data[i].lat, data[i].lon],{icon: fireIcon}).addTo(markerfires);
+            }
+            console.log("miseajour")
+        }).catch(error => {
+            // Gérez les erreurs de requête
+            console.error('Une erreur s\'est produite:', error);
+        })};
+
+        
+        function facilities(){
+
+            console.log("facility")
+            fetch('http://vps.cpe-sn.fr:8081/facility')
+            .then(response => response.json())
+            .then(data => {
+            //Faites quelque chose avec les données retournées par l'API
+            for (var i = 0; i < data.length; i++) {
+                    L.marker([data[i].lat, data[i].lon],{icon: facilityicon}).addTo(markerfacility);
+            }
+            console.log("miseajour")
+        }).catch(error => {
+            // Gérez les erreurs de requête
+            console.error('Une erreur s\'est produite:', error);
+        })};
+        
+
+        function update_vehicules(){
+            markervehicules.clearLayers();
+            fetch('http://vps.cpe-sn.fr:8081/vehicles')
+            .then(response => response.json())
+            .then(data => {
+            //Faites quelque chose avec les données retournées par l'API
+            for (var i = 0; i < data.length; i++) {
+                    L.marker([data[i].lat, data[i].lon],{icon: vehiculeicon}).addTo(markervehicules);
+            }
+            console.log("miseajour")
+        }).catch(error => {
+            // Gérez les erreurs de requête
+            console.error('Une erreur s\'est produite:', error);
+        })};
+
+        
+        
+
+        function initi()
+            {   
+                facilities();
+                setInterval(update_fires, 10000);  
+                setInterval(update_vehicules, 1000);  
+            };
+
+        initi();
+        
+            
+        
+    </script>
+</body>
+</html>
+
