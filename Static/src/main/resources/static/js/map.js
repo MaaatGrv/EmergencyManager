@@ -1,7 +1,15 @@
 var mymap = L.map('mapid').setView([45.75647670543468, 4.866953950030793], 13);
+var fireMarkers = L.layerGroup().addTo(mymap);
+var facilityMarkers = L.layerGroup().addTo(mymap);
+var vehicleMarkers = L.layerGroup().addTo(mymap);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="https://www.mapbox.com/">Mapbox</a>',
+    maxZoom: 18,
+    id: 'mapbox/light-v11', // Remplacez par le style Mapbox de votre choix
+    tileSize: 512,
+    zoomOffset: -1,
+    accessToken: 'pk.eyJ1IjoibWFhYXRncnYiLCJhIjoiY2xpMXQwZzFhMDUwcDNzcWpuaG92ZGRtayJ9.blQzt4ZlhFsr4HLThIj6ow'
 }).addTo(mymap);
 
 async function displayFires() {
@@ -32,6 +40,7 @@ async function displayFires() {
         marker.on('click', function (e) {
             marker.getPopup().openPopup();
         });
+        fireMarkers.addLayer(marker); // add marker to layer group
     }
 }
 
@@ -62,6 +71,7 @@ async function displayFacilities() {
         marker.on('click', function (e) {
             marker.getPopup().openPopup();
         });
+        fireMarkers.addLayer(marker); // add marker to layer group
     }
 }
 
@@ -92,11 +102,17 @@ async function displayVehicles() {
         marker.on('click', function (e) {
             marker.getPopup().openPopup();
         });
+        vehicleMarkers.addLayer(marker); // add marker to layer group
     }
 }
 
+function refreshData() {
+    displayFires() // .then(() => console.log("fires displayed"));
+    displayVehicles() // .then(() => console.log("vehicles displayed"));
+}
+
 $(document).ready(function () {
-    displayFires().then(() => console.log("fires displayed"));
-    displayFacilities().then(() => console.log("facilities displayed"));
-    displayVehicles().then(() => console.log("vehicles displayed"));
+    displayFacilities() // .then(() => console.log("facilities displayed"));
+    refreshData(); // display data immediately on page load
+    setInterval(refreshData, 10000); // refresh data every 10 seconds
 });
