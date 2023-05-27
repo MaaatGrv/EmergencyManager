@@ -10,11 +10,18 @@
     <title>Fire Fighter</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="../static/css/map.css" />
+    <link rel="stylesheet" href="../static/css/facility.css" />
+    <link rel="stylesheet" href="../static/css/vehicle.css" />
 </head>
 <body>
     <div id="mapid"></div>
+    <!-- include fire fragment -->
+    <div th:insert="~{fragments/fire::fire-info}"></div>
+
     <script src="../static/js/map.js"></script>
+    <script src="https://kit.fontawesome.com/ca19a942ce.js" crossorigin="anonymous"></script>
 </body>
 </html>
 
