@@ -35,7 +35,7 @@ public class EmergencyClient {
         return response.getBody();
     }
 
-    public VehicleDto moveVehicle(String vehicleId, Coord coord) {
+    public VehicleDto moveVehicle(Integer vehicleId, Coord coord) {
         HttpEntity<Coord> request = new HttpEntity<>(coord);
         ResponseEntity<VehicleDto> response = restTemplate.exchange(
                 API_URL + "/vehicle/move/" + TeamKey + "/" + vehicleId,

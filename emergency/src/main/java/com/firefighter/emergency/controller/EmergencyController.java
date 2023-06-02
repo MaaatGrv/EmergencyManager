@@ -36,7 +36,7 @@ public class EmergencyController {
     }
 
     @PutMapping("/vehicle/move/{id}")
-    public VehicleDto moveVehicle(@PathVariable String id, @RequestBody Coord coord) {
+    public VehicleDto moveVehicle(@PathVariable Integer id, @RequestBody Coord coord) {
         return emergencyService.moveVehicle(id, coord);
     }
 

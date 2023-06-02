@@ -70,4 +70,7 @@ public class FireDto {
 		this.lat = lat;
 	}
 
+	public Coord getCoord() {
+		return new Coord(lon, lat);
+	}
 }

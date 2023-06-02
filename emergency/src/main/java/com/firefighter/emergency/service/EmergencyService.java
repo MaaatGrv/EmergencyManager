@@ -28,7 +28,7 @@ public class EmergencyService {
         return emergencyClient.getAllVehicles();
     }
 
-    public VehicleDto moveVehicle(String vehicleId, Coord coord) {
+    public VehicleDto moveVehicle(Integer vehicleId, Coord coord) {
         return emergencyClient.moveVehicle(vehicleId, coord);
     }
 
