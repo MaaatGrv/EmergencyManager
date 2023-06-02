@@ -1,8 +1,22 @@
 package com.firefighter.emergency.service;
 
-import org.springframework.web.bind.annotation.RestController;
+import com.firefighter.emergency.client.EmergencyClient;
+import com.firefighter.emergency.dto.FireDto;
 
-@RestController
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+@Service
 public class EmergencyService {
 
+    private final EmergencyClient emergencyClient;
+
+    public EmergencyService(EmergencyClient emergencyClient) {
+        this.emergencyClient = emergencyClient;
+    }
+
+    public List<FireDto> getAllFires() {
+        return emergencyClient.getAllFires();
+    }
 }

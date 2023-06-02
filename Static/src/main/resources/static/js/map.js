@@ -75,7 +75,14 @@ async function displayFacilities() {
     }
 }
 
+var currentVehicleMarkers = [];
+
 async function displayVehicles() {
+    for (const marker of currentVehicleMarkers) {
+        mymap.removeLayer(marker);
+    }
+    currentVehicleMarkers = [];
+
     const response = await fetch('http://vps.cpe-sn.fr:8081/vehicles');
     const vehicles = await response.json();
     for (const vehicle of vehicles) {
@@ -102,7 +109,7 @@ async function displayVehicles() {
         marker.on('click', function (e) {
             marker.getPopup().openPopup();
         });
-        vehicleMarkers.addLayer(marker); // add marker to layer group
+        currentVehicleMarkers.push(marker); // add marker to vehicle layer group
     }
 }
 
@@ -114,5 +121,5 @@ function refreshData() {
 $(document).ready(function () {
     displayFacilities() // .then(() => console.log("facilities displayed"));
     refreshData(); // display data immediately on page load
-    setInterval(refreshData, 10000); // refresh data every 10 seconds
+    setInterval(refreshData, 5000); // refresh data every 10 seconds
 });
