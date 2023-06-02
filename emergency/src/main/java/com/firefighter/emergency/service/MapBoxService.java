@@ -2,6 +2,8 @@ package com.firefighter.emergency.service;
 
 import java.io.IOException;
 
+import org.springframework.stereotype.Service;
+
 import com.firefighter.emergency.dto.Coord;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -11,6 +13,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+@Service
 public class MapBoxService {
     private static final String ACCESS_TOKEN = "pk.eyJ1IjoibWFhYXRncnYiLCJhIjoiY2xpMXQwZzFhMDUwcDNzcWpuaG92ZGRtayJ9.blQzt4ZlhFsr4HLThIj6ow";
 

@@ -12,14 +12,21 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
     accessToken: 'pk.eyJ1IjoibWFhYXRncnYiLCJhIjoiY2xpMXQwZzFhMDUwcDNzcWpuaG92ZGRtayJ9.blQzt4ZlhFsr4HLThIj6ow'
 }).addTo(mymap);
 
+
+var currentFireMarkers = [];
+
 async function displayFires() {
+    for (const marker of currentFireMarkers) {
+        mymap.removeLayer(marker);
+    }
+    currentFireMarkers = [];
+
     const response = await fetch('http://vps.cpe-sn.fr:8081/fires');
     const fires = await response.json();
     if (fires.length === 0) {
         console.log("No fires to display");
         return;
     }
-    // <i class="fa-solid fa-fire" style="color: #ff4000;"></i>
     for (const fire of fires) {
         let fireIcon = L.divIcon({
             className: 'fire-icon-' + (fire.id).toString(), 
@@ -42,7 +49,7 @@ async function displayFires() {
         marker.on('click', function (e) {
             marker.getPopup().openPopup();
         });
-        fireMarkers.addLayer(marker); // add marker to layer group
+        currentFireMarkers.push(marker); // add marker to current fire markers
     }
 }
 

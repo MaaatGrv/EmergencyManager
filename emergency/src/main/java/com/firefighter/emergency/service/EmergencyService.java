@@ -38,4 +38,11 @@ public class EmergencyService {
         facilities.removeIf(facility -> facility.getId() != 35 && facility.getId() != 3918);
         return facilities;
     }
+
+    public List<VehicleDto> getOtherVehicles() {
+        List<VehicleDto> vehicles = emergencyClient.getOtherVehicles();
+        // The vehicles can not have facilityRefId 35 or 3918
+        vehicles.removeIf(vehicle -> vehicle.getFacilityRefID() == 35 || vehicle.getFacilityRefID() == 3918);
+        return vehicles;
+    }
 }

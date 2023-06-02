@@ -56,6 +56,16 @@ public class EmergencyClient {
         return response.getBody();
     }
 
+    public List<VehicleDto> getOtherVehicles() {
+        ResponseEntity<List<VehicleDto>> response = restTemplate.exchange(
+                API_URL + "/vehicles",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<VehicleDto>>() {
+                });
+        return response.getBody();
+    }
+
     public List<FacilityDto> getAllFacilities() {
         ResponseEntity<List<FacilityDto>> response = restTemplate.exchange(
                 API_URL + "/facility",
