@@ -19,12 +19,14 @@ async function displayFires() {
         console.log("No fires to display");
         return;
     }
+    // <i class="fa-solid fa-fire" style="color: #ff4000;"></i>
     for (const fire of fires) {
-        let fireIcon = L.icon({
-            iconUrl: 'static/img/fire.png',
-            iconSize: [38, 95],
-            iconAnchor: [22, 94],
-            popupAnchor: [-3, -76]
+        let fireIcon = L.divIcon({
+            className: 'fire-icon-' + (fire.id).toString(), 
+            html: `<span class="fa-stack fa-lg">
+                        <i class="fa-solid fa-fire fa-2xl" style="color: #ff4000;"></i>
+                   </span>`,
+            iconSize: [25, 25],
         });
         let marker = L.marker([fire.lat, fire.lon], {icon: fireIcon}).addTo(mymap);
         let fireInfoHtml = `
