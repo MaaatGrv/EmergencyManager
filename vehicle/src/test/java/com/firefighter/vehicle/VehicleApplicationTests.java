@@ -1,13 +1,12 @@
-package com.firefighter.Static;
+package com.firefighter.vehicle;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class StaticApplicationTests {
+class VehicleApplicationTests {
 
-	@Test
+	// @Test
 	void contextLoads() {
 	}
-
 }

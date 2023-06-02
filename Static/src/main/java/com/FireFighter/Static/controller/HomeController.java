@@ -1,4 +1,4 @@
-package com.FireFighter.Static.controller;
+package com.firefighter.Static.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
