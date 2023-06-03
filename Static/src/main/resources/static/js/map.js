@@ -12,45 +12,45 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
     accessToken: 'pk.eyJ1IjoibWFhYXRncnYiLCJhIjoiY2xpMXQwZzFhMDUwcDNzcWpuaG92ZGRtayJ9.blQzt4ZlhFsr4HLThIj6ow'
 }).addTo(mymap);
 
-
-var currentFireMarkers = [];
+var currentFireMarkers = new Map();
+var currentVehicleMarkers = new Map();
 
 async function displayFires() {
-    for (const marker of currentFireMarkers) {
-        mymap.removeLayer(marker);
-    }
-    currentFireMarkers = [];
-
     const response = await fetch('http://vps.cpe-sn.fr:8081/fires');
     const fires = await response.json();
-    if (fires.length === 0) {
-        console.log("No fires to display");
-        return;
-    }
+
+    const newFireMarkers = new Map();
     for (const fire of fires) {
-        let fireIcon = L.divIcon({
-            className: 'fire-icon-' + (fire.id).toString(), 
-            html: `<span class="fa-stack fa-lg">
-                        <i class="fa-solid fa-fire fa-2xl" style="color: #ff4000;"></i>
-                   </span>`,
-            iconSize: [25, 25],
-        });
-        let marker = L.marker([fire.lat, fire.lon], {icon: fireIcon}).addTo(mymap);
-        let fireInfoHtml = `
-            <div id="fire-${fire.id}" class="fire-info">
-                <p>Type: ${fire.type}</p>
-                <p>Intensity: ${fire.intensity}</p>
-                <p>Range: ${fire.range}</p>
-                <p>Longitude: ${fire.lon}</p>
-                <p>Latitude: ${fire.lat}</p>
-            </div>
-        `;
-        marker.bindPopup(fireInfoHtml);
-        marker.on('click', function (e) {
-            marker.getPopup().openPopup();
-        });
-        currentFireMarkers.push(marker); // add marker to current fire markers
+        // if the fire marker is already present, use it, else create a new marker
+        let marker = currentFireMarkers.get(fire.id);
+        if (marker) {
+            marker.setLatLng(new L.LatLng(fire.lat, fire.lon));
+        } else {
+            let fireIcon = L.divIcon({
+                className: 'fire-icon-' + (fire.id).toString(), 
+                html: `<span class="fa-stack fa-lg">
+                            <i class="fa-solid fa-fire fa-2xl" style="color: #ff4000;"></i>
+                    </span>`,
+                iconSize: [25, 25],
+            });
+            marker = L.marker([fire.lat, fire.lon], {icon: fireIcon}).addTo(mymap);
+            let fireInfoHtml = `
+                <div id="fire-${fire.id}" class="fire-info">
+                    <p>Type: ${fire.type}</p>
+                    <p>Intensity: ${fire.intensity}</p>
+                    <p>Range: ${fire.range}</p>
+                    <p>Longitude: ${fire.lon}</p>
+                    <p>Latitude: ${fire.lat}</p>
+                </div>
+            `;
+            marker.bindPopup(fireInfoHtml);
+            marker.on('click', function (e) {
+                marker.getPopup().openPopup();
+            });
+            newFireMarkers.set(fire.id, marker);
+        }
     }
+    currentFireMarkers = newFireMarkers;
 }
 
 async function displayFacilities() {
@@ -84,51 +84,88 @@ async function displayFacilities() {
     }
 }
 
-var currentVehicleMarkers = [];
-
 async function displayVehicles() {
-    for (const marker of currentVehicleMarkers) {
-        mymap.removeLayer(marker);
-    }
-    currentVehicleMarkers = [];
-
     const response = await fetch('http://vps.cpe-sn.fr:8081/vehicles');
     const vehicles = await response.json();
+
+    const newVehicleMarkers = new Map();
     for (const vehicle of vehicles) {
-        let vehicleIcon = L.divIcon({
-            className: 'vehicle-icon-'+ (vehicle.facilityRefID).toString(), 
-            html: `
-                <i class="fa-solid fa-location-pin"></i>
-                <i class="fa-solid fa-truck-moving fa"></i>
+        // if the vehicle marker is already present, use it, else create a new marker
+        let marker = currentVehicleMarkers.get(vehicle.id);
+        if (marker) {
+            marker.setLatLng(new L.LatLng(vehicle.lat, vehicle.lon));
+        } else {
+            let vehicleIcon = L.divIcon({
+                className: 'vehicle-icon-'+ (vehicle.facilityRefID).toString(), 
+                html: `
+                    <i class="fa-solid fa-location-pin"></i>
+                    <i class="fa-solid fa-truck-moving fa"></i>
                 `,
-            iconSize: [25, 25],
-        });
-        let marker = L.marker([vehicle.lat, vehicle.lon], {icon: vehicleIcon}).addTo(mymap);
-        let vehicleInfoHtml = `
-            <div id="vehicle-${vehicle.id}" class="vehicle-info">
-                <p>Type: ${vehicle.type}</p>
-                <p>Fuel: ${vehicle.fuel}</p>
-                <p>Crew Member: ${vehicle.crewMember}</p>
-                <p>Liquid Quantity: ${vehicle.liquidQuantity}</p>
-                <p>Longitude: ${vehicle.lon}</p>
-                <p>Latitude: ${vehicle.lat}</p>
-            </div>
-        `;
-        marker.bindPopup(vehicleInfoHtml);
-        marker.on('click', function (e) {
-            marker.getPopup().openPopup();
-        });
-        currentVehicleMarkers.push(marker); // add marker to vehicle layer group
+                iconSize: [25, 25],
+            });
+            marker = L.marker([vehicle.lat, vehicle.lon], {icon: vehicleIcon}).addTo(mymap);
+            let vehicleInfoHtml = `
+                <div id="vehicle-${vehicle.id}" class="vehicle-info">
+                    <p>Id: ${vehicle.id}</p>
+                    <p>Type: ${vehicle.type}</p>
+                    <p>Fuel: ${vehicle.fuel}</p>
+                    <p>Crew Member: ${vehicle.crewMember}</p>
+                    <p>Liquid Quantity: ${vehicle.liquidQuantity}</p>
+                    <p>Liquid Type: ${vehicle.liquidType}</p>
+                </div>
+            `;
+            marker.bindPopup(vehicleInfoHtml);
+            marker.on('click', function (e) {
+                marker.getPopup().openPopup();
+            });
+        }
+        newVehicleMarkers.set(vehicle.id, marker);
     }
+    // remove markers for vehicles that are no longer present
+    for (const [id, marker] of currentVehicleMarkers) {
+        if (!newVehicleMarkers.has(id)) {
+            mymap.removeLayer(marker);
+        }
+    }
+    currentVehicleMarkers = newVehicleMarkers;
 }
 
 function refreshData() {
-    displayFires() // .then(() => console.log("fires displayed"));
-    displayVehicles() // .then(() => console.log("vehicles displayed"));
+    if ($("#fire-toggle").prop('checked')) {
+        displayFires();
+    }
+    if ($("#vehicle-toggle").prop('checked')) {
+        displayVehicles();
+    }
 }
 
 $(document).ready(function () {
-    displayFacilities() // .then(() => console.log("facilities displayed"));
-    refreshData(); // display data immediately on page load
-    setInterval(refreshData, 5000); // refresh data every 10 seconds
+    displayFacilities();
+    refreshData();
+    setInterval(refreshData, 5000);
+
+    // Add event listeners for checkboxes
+    $("#fire-toggle").change(function() {
+        if(this.checked) {
+            fireMarkers.addTo(mymap);
+        } else {
+            mymap.removeLayer(fireMarkers);
+        }
+    });
+
+    $("#facility-toggle").change(function() {
+        if(this.checked) {
+            facilityMarkers.addTo(mymap);
+        } else {
+            mymap.removeLayer(facilityMarkers);
+        }
+    });
+
+    $("#vehicle-toggle").change(function() {
+        if(this.checked) {
+            vehicleMarkers.addTo(mymap);
+        } else {
+            mymap.removeLayer(vehicleMarkers);
+        }
+    });
 });

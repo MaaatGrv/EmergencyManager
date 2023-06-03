@@ -1,5 +1,6 @@
 package com.firefighter.emergency.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,34 +25,65 @@ public class FireManager {
         this.mapboxService = mapboxService;
     }
 
-    @Scheduled(fixedRate = 60000) // Run every 60 seconds
+    @Scheduled(fixedRate = 10000) // Run every 10 seconds
     public void handleFires() {
         List<FireDto> fires = emergencyService.getAllFires();
         List<VehicleDto> vehicles = emergencyService.getAllVehicles();
         List<FacilityDto> facilities = emergencyService.getTeamFacilities();
 
-        // Determine the most needed liquid type based on the current fires
-        LiquidType mostNeededLiquidType = determineMostNeededLiquidType(fires);
+        List<FireDto> unhandledFires = new ArrayList<>(fires);
 
         for (VehicleDto vehicle : vehicles) {
             if (vehicle.getLiquidQuantity() <= 0) {
-                // This vehicle is out of liquid, move it to the nearest facility to refuel
                 FacilityDto nearestFacility = findNearestFacility(vehicle, facilities);
                 Coord nearestFacilityCoord = new Coord();
                 nearestFacilityCoord.setLat(nearestFacility.getLat());
                 nearestFacilityCoord.setLon(nearestFacility.getLon());
                 emergencyService.moveVehicle(vehicle.getId(), nearestFacilityCoord);
-                // Change the vehicle's liquid type to the most needed one
+
+                LiquidType mostNeededLiquidType = determineMostNeededLiquidType(unhandledFires);
                 vehicle.setLiquidType(mostNeededLiquidType);
                 continue;
             }
-            for (FireDto fire : fires) {
-                // Find best vehicle for this fire
-                VehicleDto bestVehicle = findBestVehicleForFire(fire);
-                // Move vehicle to fire location
-                emergencyService.moveVehicle(bestVehicle.getId(), fire.getCoord());
+
+            FireDto bestFire = null;
+            double bestScore = Double.NEGATIVE_INFINITY;
+            for (FireDto fire : unhandledFires) {
+                double score = calculateScore(vehicle, fire);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestFire = fire;
+                }
             }
+
+            if (bestFire == null) {
+                continue;
+            }
+
+            emergencyService.moveVehicle(vehicle.getId(), bestFire.getCoord());
+            unhandledFires.remove(bestFire);
+            System.out.println("Vehicle " + vehicle.getId() + " is handling fire " + bestFire.getId());
         }
+    }
+
+    private double calculateScore(VehicleDto vehicle, FireDto fire) {
+        Coord vehicleCoord = new Coord();
+        vehicleCoord.setLat(vehicle.getLat());
+        vehicleCoord.setLon(vehicle.getLon());
+
+        double distance = calculateDistance(vehicleCoord, fire.getCoord());
+        double distanceInKm = distance / 1000;
+        double fuelNeeded = distanceInKm * vehicle.getType().getFuelConsumption();
+
+        if (vehicle.getFuel() < fuelNeeded) {
+            return Double.NEGATIVE_INFINITY; // This vehicle can't reach the fire
+        }
+
+        double liquidScore = vehicle.getLiquidQuantity() * vehicle.getLiquidType().getEfficiency(fire.getType());
+        double efficiencyScore = vehicle.getType().getEfficiency() * 10;
+        double distanceScore = 1 / distance;
+
+        return liquidScore + efficiencyScore + distanceScore;
     }
 
     private LiquidType determineMostNeededLiquidType(List<FireDto> fires) {
@@ -136,6 +168,7 @@ public class FireManager {
             vehicleCoord.setLon(vehicle.getLon());
 
             double distance = calculateDistance(vehicleCoord, fire.getCoord());
+            System.out.println("Distance: " + distance);
             double fuelNeeded = distance * vehicle.getType().getFuelConsumption();
             if (vehicle.getFuel() < fuelNeeded) {
                 continue; // Skip this vehicle if it doesn't have enough fuel to reach the fire
