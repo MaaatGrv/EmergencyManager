@@ -51,4 +51,8 @@ public class EmergencyService {
         emergencyClient.updateVehicleLiquidType(id, bestLiquid);
     }
 
+    public VehicleDto getVehicleById(Integer id) {
+        return emergencyClient.getVehicleById(id);
+    }
+
 }
