@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 import com.firefighter.emergency.dto.Coord;
 import com.firefighter.emergency.dto.FacilityDto;
 import com.firefighter.emergency.dto.FireDto;
+import com.firefighter.emergency.dto.LiquidType;
 import com.firefighter.emergency.dto.VehicleDto;
 
 @Repository
@@ -75,4 +76,50 @@ public class EmergencyClient {
                 });
         return response.getBody();
     }
+
+    public VehicleDto updateVehicleLiquidType(Integer vehicleId, LiquidType liquidType) {
+        VehicleDto vehicleDto = this.getVehicleById(vehicleId);
+        if (vehicleDto != null) {
+            FacilityDto facilityDto = this.getFacilityById(vehicleDto.getFacilityRefID());
+            if (facilityDto != null && isVehicleInFacility(vehicleDto, facilityDto)) {
+                vehicleDto.setLiquidType(liquidType);
+                HttpEntity<VehicleDto> request = new HttpEntity<>(vehicleDto);
+                ResponseEntity<VehicleDto> response = restTemplate.exchange(
+                        API_URL + "/vehicle/" + TeamKey + "/" + vehicleId,
+                        HttpMethod.PUT,
+                        request,
+                        new ParameterizedTypeReference<VehicleDto>() {
+                        });
+                return response.getBody();
+            }
+        }
+        return null;
+    }
+
+    private FacilityDto getFacilityById(Integer facilityId) {
+        List<FacilityDto> facilities = this.getAllFacilities();
+        for (FacilityDto facility : facilities) {
+            if (facility.getId().equals(facilityId)) {
+                return facility;
+            }
+        }
+        return null;
+    }
+
+    private boolean isVehicleInFacility(VehicleDto vehicle, FacilityDto facility) {
+        return facility.getVehicleIdSet().contains(vehicle.getId()) &&
+                vehicle.getLon() == facility.getLon() &&
+                vehicle.getLat() == facility.getLat();
+    }
+
+    public VehicleDto getVehicleById(Integer vehicleId) {
+        List<VehicleDto> vehicles = this.getAllVehicles();
+        for (VehicleDto vehicle : vehicles) {
+            if (vehicle.getId().equals(vehicleId)) {
+                return vehicle;
+            }
+        }
+        return null;
+    }
+
 }

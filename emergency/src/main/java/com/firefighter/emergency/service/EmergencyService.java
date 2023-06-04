@@ -4,6 +4,7 @@ import com.firefighter.emergency.client.EmergencyClient;
 import com.firefighter.emergency.dto.Coord;
 import com.firefighter.emergency.dto.FacilityDto;
 import com.firefighter.emergency.dto.FireDto;
+import com.firefighter.emergency.dto.LiquidType;
 import com.firefighter.emergency.dto.VehicleDto;
 
 import java.util.List;
@@ -45,4 +46,9 @@ public class EmergencyService {
         vehicles.removeIf(vehicle -> vehicle.getFacilityRefID() == 35 || vehicle.getFacilityRefID() == 3918);
         return vehicles;
     }
+
+    public void updateVehicleLiquidType(Integer id, LiquidType bestLiquid) {
+        emergencyClient.updateVehicleLiquidType(id, bestLiquid);
+    }
+
 }

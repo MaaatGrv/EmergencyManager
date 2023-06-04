@@ -45,7 +45,7 @@ public class FireManager {
                 vehicle.setLiquidType(mostNeededLiquidType);
                 continue;
             }
-
+            updateVehicles();
             FireDto bestFire = null;
             double bestScore = Double.NEGATIVE_INFINITY;
             for (FireDto fire : unhandledFires) {
@@ -191,6 +191,37 @@ public class FireManager {
 
     private double calculateDistance(Coord coord1, Coord coord2) {
         return mapboxService.getDistance(coord1, coord2);
+    }
+
+    public void updateVehicles() {
+        List<VehicleDto> vehicles = emergencyService.getAllVehicles();
+        List<FireDto> fires = emergencyService.getAllFires();
+        for (VehicleDto vehicle : vehicles) {
+            LiquidType bestLiquid = determineBestLiquidForVehicle(vehicle, fires);
+            if (!bestLiquid.equals(vehicle.getLiquidType())) {
+                // Update the liquid type of the vehicle if a better one is found
+                emergencyService.updateVehicleLiquidType(vehicle.getId(), bestLiquid);
+            }
+        }
+    }
+
+    private LiquidType determineBestLiquidForVehicle(VehicleDto vehicle, List<FireDto> fires) {
+        LiquidType bestLiquid = null;
+        double bestScore = Double.NEGATIVE_INFINITY;
+        for (LiquidType liquid : LiquidType.values()) {
+            double score = 0.0;
+            for (FireDto fire : fires) {
+                // Only consider fires that the vehicle is capable of handling
+                if (vehicle.getLiquidQuantity() * liquid.getEfficiency(fire.getType()) > fire.getIntensity()) {
+                    score += liquid.getEfficiency(fire.getType()) * fire.getIntensity();
+                }
+            }
+            if (score > bestScore) {
+                bestScore = score;
+                bestLiquid = liquid;
+            }
+        }
+        return bestLiquid;
     }
 
     private double computeCrewScore(VehicleDto vehicle) {

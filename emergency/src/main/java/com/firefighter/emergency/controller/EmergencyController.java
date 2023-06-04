@@ -3,6 +3,7 @@ package com.firefighter.emergency.controller;
 import com.firefighter.emergency.service.EmergencyService;
 import com.firefighter.emergency.dto.FacilityDto;
 import com.firefighter.emergency.dto.FireDto;
+import com.firefighter.emergency.dto.LiquidType;
 import com.firefighter.emergency.dto.VehicleDto;
 import com.firefighter.emergency.dto.Coord;
 
@@ -43,5 +44,10 @@ public class EmergencyController {
     @GetMapping("/facilities")
     public List<FacilityDto> getAllFacilities() {
         return emergencyService.getTeamFacilities();
+    }
+
+    @PutMapping("vehicle/update/{id}")
+    public void updateVehicleLiquidType(@PathVariable Integer id, @RequestBody LiquidType liquidType) {
+        emergencyService.updateVehicleLiquidType(id, liquidType);
     }
 }
