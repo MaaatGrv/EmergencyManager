@@ -49,6 +49,8 @@ async function displayFires() {
             });
             newFireMarkers.set(fire.id, marker);
         }
+        newFireMarkers.set(fire.id, marker);
+        fireMarkers.addLayer(marker); // Ajoutez cette ligne pour ajouter le marker au groupe fireMarkers
     }
     currentFireMarkers = newFireMarkers;
 }
@@ -56,6 +58,10 @@ async function displayFires() {
 async function displayFacilities() {
     const response = await fetch('http://vps.cpe-sn.fr:8081/facility');
     const facilities = await response.json();
+
+    // Map pour gérer les noms des installations similaires
+    let facilityNameMap = new Map();
+    
     for (const facility of facilities) {
         let facilityIcon = L.divIcon({
             className: 'facility-icon-' + (facility.id).toString(), 
@@ -65,7 +71,8 @@ async function displayFacilities() {
                    </span>`,
             iconSize: [25, 25],
         });
-        let marker = L.marker([facility.lat, facility.lon], {icon: facilityIcon}).addTo(mymap);
+        marker = L.marker([facility.lat, facility.lon], {icon: facilityIcon, id: facility.id, name: facility.name}); // Ajouter le nom ici
+        facilityMarkers.addLayer(marker);
         let facilityInfoHtml = `
             <div id="facility-${facility.id}" class="facility-info">
                 <p>Name: ${facility.name}</p>
@@ -75,12 +82,12 @@ async function displayFacilities() {
                 <p>Latitude: ${facility.lat}</p>
             </div>
         `;
-        
         marker.bindPopup(facilityInfoHtml);
         marker.on('click', function (e) {
             marker.getPopup().openPopup();
         });
-        fireMarkers.addLayer(marker); // add marker to layer group
+        facilityMarkers.addLayer(marker); // Changez cette ligne, vous ajoutiez auparavant le marker à fireMarkers
+        $("#facility-select").append(new Option(facility.name, facility.name)); // Utiliser le nom à la place de l'id ici
     }
 }
 
@@ -103,7 +110,8 @@ async function displayVehicles() {
                 `,
                 iconSize: [25, 25],
             });
-            marker = L.marker([vehicle.lat, vehicle.lon], {icon: vehicleIcon}).addTo(mymap);
+            marker = L.marker([vehicle.lat, vehicle.lon], {icon: vehicleIcon, id: vehicle.id});
+            vehicleMarkers.addLayer(marker);
             let vehicleInfoHtml = `
                 <div id="vehicle-${vehicle.id}" class="vehicle-info">
                     <p>Id: ${vehicle.id}</p>
@@ -120,6 +128,8 @@ async function displayVehicles() {
             });
         }
         newVehicleMarkers.set(vehicle.id, marker);
+        vehicleMarkers.addLayer(marker); // Ajoutez cette ligne pour ajouter le marker au groupe vehicleMarkers
+        $("#vehicle-select").append(new Option(vehicle.facilityRefID, vehicle.facilityRefID));
     }
     // remove markers for vehicles that are no longer present
     for (const [id, marker] of currentVehicleMarkers) {
@@ -144,28 +154,52 @@ $(document).ready(function () {
     refreshData();
     setInterval(refreshData, 5000);
 
-    // Add event listeners for checkboxes
     $("#fire-toggle").change(function() {
         if(this.checked) {
             fireMarkers.addTo(mymap);
+            displayFires(); // Ajoutez cette ligne pour mettre à jour les markers
         } else {
             mymap.removeLayer(fireMarkers);
         }
     });
-
+    
     $("#facility-toggle").change(function() {
         if(this.checked) {
             facilityMarkers.addTo(mymap);
+            displayFacilities(); // Ajoutez cette ligne pour mettre à jour les markers
         } else {
             mymap.removeLayer(facilityMarkers);
         }
     });
-
+    
     $("#vehicle-toggle").change(function() {
         if(this.checked) {
             vehicleMarkers.addTo(mymap);
+            displayVehicles(); // Ajoutez cette ligne pour mettre à jour les markers
         } else {
             mymap.removeLayer(vehicleMarkers);
         }
     });
+
+    $("#facility-select").change(function() {
+        const selectedFacilityName = String(this.value);
+        facilityMarkers.eachLayer(function(layer) {
+            if (selectedFacilityName === 'all' || String(layer.options.name) === selectedFacilityName) { // Utiliser le nom à la place de l'id ici
+                layer.addTo(mymap);
+            } else {
+                mymap.removeLayer(layer);
+            }
+        });
+    });
+    
+    $("#vehicle-select").change(function() {
+        const selectedVehicleId = String(this.value);
+        vehicleMarkers.eachLayer(function(layer) {
+            if (selectedVehicleId === 'all' || String(layer.options.id) === selectedVehicleId) {
+                layer.addTo(mymap);
+            } else {
+                mymap.removeLayer(layer);
+            }
+        });
+    });      
 });
