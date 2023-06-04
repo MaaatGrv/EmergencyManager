@@ -58,11 +58,11 @@ async function displayFires() {
 async function displayFacilities() {
     const response = await fetch('http://vps.cpe-sn.fr:8081/facility');
     const facilities = await response.json();
-
-    // Map pour gérer les noms des installations similaires
-    let facilityNameMap = new Map();
-    
+    let facilitiesSet = new Set();
     for (const facility of facilities) {
+        // Supprime 'Caserne ', 'Caserne 2 ' des noms de caserne
+        let cleanFacilityName = facility.name.replace(/Caserne 2 |Caserne /g, '');
+
         let facilityIcon = L.divIcon({
             className: 'facility-icon-' + (facility.id).toString(), 
             html: `<span class="fa-stack fa-lg">
@@ -71,11 +71,11 @@ async function displayFacilities() {
                    </span>`,
             iconSize: [25, 25],
         });
-        marker = L.marker([facility.lat, facility.lon], {icon: facilityIcon, id: facility.id, name: facility.name}); // Ajouter le nom ici
+        marker = L.marker([facility.lat, facility.lon], {icon: facilityIcon, id: facility.id, name: cleanFacilityName}); 
         facilityMarkers.addLayer(marker);
         let facilityInfoHtml = `
             <div id="facility-${facility.id}" class="facility-info">
-                <p>Name: ${facility.name}</p>
+                <p>Name: ${cleanFacilityName}</p>
                 <p>Max Vehicle Space: ${facility.maxVehicleSpace}</p>
                 <p>People Capacity: ${facility.peopleCapacity}</p>
                 <p>Longitude: ${facility.lon}</p>
@@ -86,10 +86,17 @@ async function displayFacilities() {
         marker.on('click', function (e) {
             marker.getPopup().openPopup();
         });
-        facilityMarkers.addLayer(marker); // Changez cette ligne, vous ajoutiez auparavant le marker à fireMarkers
-        $("#facility-select").append(new Option(facility.name, facility.name)); // Utiliser le nom à la place de l'id ici
+        facilityMarkers.addLayer(marker);
+        
+        // Vérifiez si le nom de la facility existe déjà dans le menu déroulant avant de l'ajouter
+        if (!facilitiesSet.has(cleanFacilityName)) {
+            $("#facility-select").append(new Option(cleanFacilityName, cleanFacilityName));
+            facilitiesSet.add(cleanFacilityName);
+        }
     }
 }
+
+var selectedFacilityId = 'all'; // Nouvelle variable pour suivre l'id de la facility sélectionnée
 
 async function displayVehicles() {
     const response = await fetch('http://vps.cpe-sn.fr:8081/vehicles');
@@ -97,6 +104,8 @@ async function displayVehicles() {
 
     const newVehicleMarkers = new Map();
     for (const vehicle of vehicles) {
+        // Si une facility spécifique est sélectionnée, ignorer les véhicules qui ne sont pas associés à cette facility
+        if (selectedFacilityId !== 'all' && vehicle.facilityRefID !== selectedFacilityId) continue;
         // if the vehicle marker is already present, use it, else create a new marker
         let marker = currentVehicleMarkers.get(vehicle.id);
         if (marker) {
@@ -110,7 +119,7 @@ async function displayVehicles() {
                 `,
                 iconSize: [25, 25],
             });
-            marker = L.marker([vehicle.lat, vehicle.lon], {icon: vehicleIcon, id: vehicle.id});
+            marker = L.marker([vehicle.lat, vehicle.lon], {icon: vehicleIcon, id: vehicle.id, facilityRefID: vehicle.facilityRefID});  // stocker le facilityRefID dans les options
             vehicleMarkers.addLayer(marker);
             let vehicleInfoHtml = `
                 <div id="vehicle-${vehicle.id}" class="vehicle-info">
@@ -183,23 +192,30 @@ $(document).ready(function () {
 
     $("#facility-select").change(function() {
         const selectedFacilityName = String(this.value);
-        facilityMarkers.eachLayer(function(layer) {
-            if (selectedFacilityName === 'all' || String(layer.options.name) === selectedFacilityName) { // Utiliser le nom à la place de l'id ici
-                layer.addTo(mymap);
-            } else {
-                mymap.removeLayer(layer);
-            }
-        });
-    });
     
-    $("#vehicle-select").change(function() {
-        const selectedVehicleId = String(this.value);
-        vehicleMarkers.eachLayer(function(layer) {
-            if (selectedVehicleId === 'all' || String(layer.options.id) === selectedVehicleId) {
+        // find the ID of the selected facility
+        facilityMarkers.eachLayer(function(layer) {
+            if (String(layer.options.name) === selectedFacilityName) {
+                selectedFacilityId = layer.options.id;
+            }
+        });
+    
+        facilityMarkers.eachLayer(function(layer) {
+            if (selectedFacilityName === 'all' || String(layer.options.name) === selectedFacilityName) { 
                 layer.addTo(mymap);
             } else {
                 mymap.removeLayer(layer);
             }
         });
-    });      
+    
+        vehicleMarkers.eachLayer(function(layer) {
+            if (selectedFacilityName === 'all' || String(layer.options.facilityRefID) === selectedFacilityId) {
+                layer.addTo(mymap);
+            } else {
+                mymap.removeLayer(layer);
+            }
+        });
+    
+        displayVehicles(); // Refresh vehicle markers after facility selection change
+    });    
 });
