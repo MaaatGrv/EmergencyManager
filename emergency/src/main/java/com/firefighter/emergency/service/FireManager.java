@@ -77,7 +77,7 @@ public class FireManager {
                 // if the vehicle's liquid quantity is at its capacity, update its liquid type
                 if (vehicle.getLiquidQuantity() == vehicle.getType().getLiquidCapacity()) {
                     // Set the liquid type to the most needed type
-                    LiquidType mostNeededLiquidType = determineMostNeededLiquidType(unhandledFires);
+                    LiquidType mostNeededLiquidType = determineMostNeededLiquidType(unhandledFires, vehicle);
                     vehicle.setLiquidType(mostNeededLiquidType);
                 } else {
                     // If the vehicle is not yet refueled, skip the rest of this iteration
@@ -143,12 +143,6 @@ public class FireManager {
         }
 
         return segments;
-    }
-
-    // Refill vehicle with the most needed liquid type
-    private void refillLiquid(VehicleDto vehicle, List<FireDto> unhandledFires) {
-        LiquidType mostNeededLiquidType = determineMostNeededLiquidType(unhandledFires, vehicle);
-        vehicle.setLiquidType(mostNeededLiquidType);
     }
 
     private double calculateScore(VehicleDto vehicle, FireDto fire) {

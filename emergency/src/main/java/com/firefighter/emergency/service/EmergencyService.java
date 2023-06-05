@@ -77,10 +77,6 @@ public class EmergencyService {
         }, 0, MOVE_INTERVAL_MS, TimeUnit.MILLISECONDS);
     }
 
-    public VehicleDto getVehicleById(Integer vehicleId) {
-        return emergencyClient.getVehicleById(vehicleId);
-    }
-
     public List<FacilityDto> getTeamFacilities() {
         List<FacilityDto> facilities = emergencyClient.getAllFacilities();
         // Get facilities with the id 35 or 3918
