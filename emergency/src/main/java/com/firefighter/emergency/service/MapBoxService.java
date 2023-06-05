@@ -18,7 +18,7 @@ import okhttp3.Response;
 
 @Service
 public class MapBoxService {
-    private static final String ACCESS_TOKEN = "pk.eyJ1IjoibWF0Z3J2IiwiYSI6ImNsaWh0bHZqdjBlOGUzZHBpcml4bWIwbW8ifQ.Q82YD2XdwAO_fN5B3yApDg";
+    private static final String ACCESS_TOKEN = "pk.eyJ1IjoibWF0cmd2IiwiYSI6ImNsaWlvd2c3bzAwYnkzcm9kNjNyeG9jbmUifQ.E99t5TTkElzNhxDSKvknMA";
 
     private OkHttpClient client = new OkHttpClient();
 

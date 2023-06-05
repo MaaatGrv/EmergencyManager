@@ -104,4 +104,11 @@ public class VehicleDto {
 		this.id = id;
 	}
 
+	public Coord getCoord() {
+		Coord coord = new Coord();
+		coord.setLat(lat);
+		coord.setLon(lon);
+		return coord;
+	}
+
 }

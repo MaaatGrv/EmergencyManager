@@ -108,4 +108,11 @@ public class FacilityDto {
 	public void setTeamUuid(String teamUuid) {
 		this.teamUuid = teamUuid;
 	}
+
+	public Coord getCoord() {
+		Coord coord = new Coord();
+		coord.setLat(lat);
+		coord.setLon(lon);
+		return coord;
+	}
 }
