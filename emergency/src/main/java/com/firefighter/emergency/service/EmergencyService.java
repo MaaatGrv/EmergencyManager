@@ -99,4 +99,20 @@ public class EmergencyService {
         return emergencyClient.getVehicleById(id);
     }
 
+    public void initializeVehiclesInFacilities() {
+        List<VehicleDto> vehicles = getAllVehicles();
+        List<FacilityDto> facilities = getTeamFacilities();
+
+        for (VehicleDto vehicle : vehicles) {
+            FacilityDto facility = facilities.stream()
+                    .filter(f -> f.getId().equals(vehicle.getFacilityRefID()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (facility != null) {
+                moveVehicle(vehicle.getId(), facility.getCoord());
+            }
+        }
+    }
+
 }

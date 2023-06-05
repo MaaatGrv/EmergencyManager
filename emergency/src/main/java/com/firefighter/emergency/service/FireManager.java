@@ -1,6 +1,7 @@
 package com.firefighter.emergency.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import com.firefighter.emergency.dto.FireDto;
 import com.firefighter.emergency.dto.LiquidType;
 
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -23,86 +25,122 @@ public class FireManager {
 
     private final EmergencyService emergencyService;
     private final MapBoxService mapboxService;
-    private final ScheduledExecutorService executorService;
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(10); // Créez un pool de
+                                                                                                   // threads avec 10
+                                                                                                   // threads
 
     public FireManager(EmergencyService emergencyService, MapBoxService mapboxService,
             ScheduledExecutorService executorService) {
         this.emergencyService = emergencyService;
         this.mapboxService = mapboxService;
-        this.executorService = executorService;
     }
 
-    @Scheduled(fixedRate = 30000) // Run every 30 seconds
+    @Scheduled(fixedRate = 60000) // Run every 30 seconds
     public void handleFires() {
         List<FireDto> fires = emergencyService.getAllFires();
         List<VehicleDto> vehicles = emergencyService.getAllVehicles();
         List<FacilityDto> facilities = emergencyService.getTeamFacilities();
 
-        List<FireDto> unhandledFires = new ArrayList<>(fires);
-
         for (VehicleDto vehicle : vehicles) {
-            if (vehicle.getLiquidQuantity() <= 0) {
-                FacilityDto nearestFacility = findNearestFacility(vehicle, facilities);
-                emergencyService.moveVehicleUniformly(vehicle.getId(), nearestFacility.getCoord());
+            executorService.submit(() -> handleVehicle(vehicle, fires, facilities));
+        }
+    }
 
-                // if the vehicle is at the facility, refill its liquid
+    private void handleVehicle(VehicleDto vehicle, List<FireDto> fires, List<FacilityDto> facilities) {
+        List<FireDto> unhandledFires = Collections.synchronizedList(new ArrayList<>(fires));
+
+        if (vehicle.getLiquidQuantity() == 0) {
+            FacilityDto nearestFacility = findNearestFacility(vehicle, facilities);
+            emergencyService.moveVehicleUniformly(vehicle.getId(), nearestFacility.getCoord());
+
+            double epsilon = 0.00001;
+            while ((Math.abs(vehicle.getCoord().getLat() - nearestFacility.getLat()) < epsilon
+                    && Math.abs(vehicle.getCoord().getLon() - nearestFacility.getLon()) < epsilon)) {
+                System.out.println(
+                        "Vehicle " + vehicle.getId() + " is moving to facility " + nearestFacility.getId());
+            }
+
+            refillVehicle(vehicle, unhandledFires);
+
+            synchronized (unhandledFires) {
+                FireDto bestFire = null;
+                double bestScore = Double.NEGATIVE_INFINITY;
+                for (FireDto fire : unhandledFires) {
+                    double score = calculateScore(vehicle, fire);
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestFire = fire;
+                    }
+                }
+
+                if (bestFire == null) {
+                    return;
+                }
+
+                emergencyService.moveVehicleUniformly(vehicle.getId(), bestFire.getCoord());
+                unhandledFires.remove(bestFire);
+                System.out.println("Vehicle " + vehicle.getId() + " is handling fire " + bestFire.getId());
+            }
+        } else {
+            for (FacilityDto facility : facilities) {
                 double epsilon = 0.00001;
-                while ((Math.abs(vehicle.getCoord().getLat() - nearestFacility.getLat()) < epsilon
-                        && Math.abs(vehicle.getCoord().getLon() - nearestFacility.getLon()) < epsilon)) {
-                    System.out.println(
-                            "Vehicle " + vehicle.getId() + " is moving to facility " + nearestFacility.getId());
-                }
+                if (Math.abs(vehicle.getCoord().getLat() - facility.getLat()) < epsilon
+                        && Math.abs(vehicle.getCoord().getLon() - facility.getLon()) < epsilon
+                        && vehicle.getLiquidQuantity() == vehicle.getType().getLiquidCapacity()) {
 
-                while (true) {
-                    // Récupère les données mises à jour du véhicule depuis l'API
-                    vehicle = emergencyService.getVehicleById(vehicle.getId());
+                    synchronized (unhandledFires) {
+                        FireDto bestFire = null;
+                        double bestScore = Double.NEGATIVE_INFINITY;
+                        for (FireDto fire : unhandledFires) {
+                            double score = calculateScore(vehicle, fire);
+                            if (score > bestScore) {
+                                bestScore = score;
+                                bestFire = fire;
+                            }
+                        }
 
-                    // Vérifie si le réservoir de liquide est plein
-                    if (vehicle.getLiquidQuantity() >= vehicle.getType().getLiquidCapacity()) {
-                        break;
-                    }
+                        if (bestFire == null) {
+                            return;
+                        }
 
-                    System.out.println("Vehicle " + vehicle.getId() + " is refilling liquid : "
-                            + vehicle.getLiquidQuantity() + "/" + vehicle.getType().getLiquidCapacity());
-
-                    // Met en pause le thread pour un intervalle de temps avant la prochaine
-                    // vérification
-                    try {
-                        Thread.sleep(6000); // Pause pour 1 seconde
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        emergencyService.moveVehicleUniformly(vehicle.getId(), bestFire.getCoord());
+                        unhandledFires.remove(bestFire);
+                        System.out.println("Vehicle " + vehicle.getId() + " is handling fire " + bestFire.getId());
                     }
                 }
-
-                // if the vehicle's liquid quantity is at its capacity, update its liquid type
-                if (vehicle.getLiquidQuantity() == vehicle.getType().getLiquidCapacity()) {
-                    // Set the liquid type to the most needed type
-                    LiquidType mostNeededLiquidType = determineMostNeededLiquidType(unhandledFires, vehicle);
-                    vehicle.setLiquidType(mostNeededLiquidType);
-                } else {
-                    // If the vehicle is not yet refueled, skip the rest of this iteration
-                    continue;
-                }
             }
 
-            updateVehicles();
-            FireDto bestFire = null;
-            double bestScore = Double.NEGATIVE_INFINITY;
-            for (FireDto fire : unhandledFires) {
-                double score = calculateScore(vehicle, fire);
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestFire = fire;
-                }
+        }
+    }
+
+    private void refillVehicle(VehicleDto vehicle, List<FireDto> unhandledFires) {
+        Future<?> future = executorService.scheduleAtFixedRate(() -> {
+            // Récupère les données mises à jour du véhicule depuis l'API
+            VehicleDto updatedVehicle = emergencyService.getVehicleById(vehicle.getId());
+
+            // Vérifie si le réservoir de liquide est plein
+            if (updatedVehicle.getLiquidQuantity() >= updatedVehicle.getType().getLiquidCapacity()) {
+                LiquidType mostNeededLiquidType = determineMostNeededLiquidType(unhandledFires, vehicle);
+                updatedVehicle.setLiquidType(mostNeededLiquidType);
+
+                // Annule la tâche si le véhicule est complètement rempli
+                throw new RuntimeException("Vehicle refilled");
             }
 
-            if (bestFire == null) {
-                continue;
+            System.out.println("Vehicle " + updatedVehicle.getId() + " is refilling liquid : "
+                    + updatedVehicle.getLiquidQuantity() + "/" + updatedVehicle.getType().getLiquidCapacity());
+        }, 0, 6, TimeUnit.SECONDS); // Execute le code toutes les 6 secondes
+
+        while (true) {
+            if (future.isDone()) {
+                break;
             }
 
-            emergencyService.moveVehicleUniformly(vehicle.getId(), bestFire.getCoord());
-            unhandledFires.remove(bestFire);
-            System.out.println("Vehicle " + vehicle.getId() + " is handling fire " + bestFire.getId());
+            try {
+                Thread.sleep(1000); // Sleep for 1 second
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
