@@ -25,7 +25,7 @@ public class FireManager {
         this.mapboxService = mapboxService;
     }
 
-    @Scheduled(fixedRate = 10000) // Run every 10 seconds
+    @Scheduled(fixedRate = 30000) // Run every 30 seconds
     public void handleFires() {
         List<FireDto> fires = emergencyService.getAllFires();
         List<VehicleDto> vehicles = emergencyService.getAllVehicles();
@@ -36,15 +36,48 @@ public class FireManager {
         for (VehicleDto vehicle : vehicles) {
             if (vehicle.getLiquidQuantity() <= 0) {
                 FacilityDto nearestFacility = findNearestFacility(vehicle, facilities);
-                Coord nearestFacilityCoord = new Coord();
-                nearestFacilityCoord.setLat(nearestFacility.getLat());
-                nearestFacilityCoord.setLon(nearestFacility.getLon());
-                emergencyService.moveVehicle(vehicle.getId(), nearestFacilityCoord);
+                emergencyService.moveVehicleUniformly(vehicle.getId(), nearestFacility.getCoord());
 
-                LiquidType mostNeededLiquidType = determineMostNeededLiquidType(unhandledFires);
-                vehicle.setLiquidType(mostNeededLiquidType);
-                continue;
+                // if the vehicle is at the facility, refill its liquid
+                double epsilon = 0.00001;
+                while ((Math.abs(vehicle.getCoord().getLat() - nearestFacility.getLat()) < epsilon
+                        && Math.abs(vehicle.getCoord().getLon() - nearestFacility.getLon()) < epsilon)) {
+                    System.out.println(
+                            "Vehicle " + vehicle.getId() + " is moving to facility " + nearestFacility.getId());
+                }
+
+                while (true) {
+                    // Récupère les données mises à jour du véhicule depuis l'API
+                    vehicle = emergencyService.getVehicleById(vehicle.getId());
+
+                    // Vérifie si le réservoir de liquide est plein
+                    if (vehicle.getLiquidQuantity() >= vehicle.getType().getLiquidCapacity()) {
+                        break;
+                    }
+
+                    System.out.println("Vehicle " + vehicle.getId() + " is refilling liquid : "
+                            + vehicle.getLiquidQuantity() + "/" + vehicle.getType().getLiquidCapacity());
+
+                    // Met en pause le thread pour un intervalle de temps avant la prochaine
+                    // vérification
+                    try {
+                        Thread.sleep(6000); // Pause pour 1 seconde
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // if the vehicle's liquid quantity is at its capacity, update its liquid type
+                if (vehicle.getLiquidQuantity() == vehicle.getType().getLiquidCapacity()) {
+                    // Set the liquid type to the most needed type
+                    LiquidType mostNeededLiquidType = determineMostNeededLiquidType(unhandledFires);
+                    vehicle.setLiquidType(mostNeededLiquidType);
+                } else {
+                    // If the vehicle is not yet refueled, skip the rest of this iteration
+                    continue;
+                }
             }
+
             updateVehicles();
             FireDto bestFire = null;
             double bestScore = Double.NEGATIVE_INFINITY;
@@ -60,7 +93,7 @@ public class FireManager {
                 continue;
             }
 
-            emergencyService.moveVehicle(vehicle.getId(), bestFire.getCoord());
+            emergencyService.moveVehicleUniformly(vehicle.getId(), bestFire.getCoord());
             unhandledFires.remove(bestFire);
             System.out.println("Vehicle " + vehicle.getId() + " is handling fire " + bestFire.getId());
         }
@@ -223,25 +256,4 @@ public class FireManager {
         }
         return bestLiquid;
     }
-
-    private double computeCrewScore(VehicleDto vehicle) {
-        return 0;
-    }
-
-    private double computeFuelQuantityScore(VehicleDto vehicle) {
-        return 0;
-    }
-
-    private double computeLiquidTypeScore(VehicleDto vehicle, FireDto fire) {
-        return 0;
-    }
-
-    private double computeLiquidQuantityScore(VehicleDto vehicle) {
-        return 0;
-    }
-
-    private double computeDistanceScore(VehicleDto vehicle, FireDto fire) {
-        return 0;
-    }
-
 }

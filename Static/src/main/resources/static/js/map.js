@@ -9,7 +9,7 @@ L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
     id: 'mapbox/light-v11', // Remplacez par le style Mapbox de votre choix
     tileSize: 512,
     zoomOffset: -1,
-    accessToken: 'pk.eyJ1IjoibWFhYXRncnYiLCJhIjoiY2xpMXQwZzFhMDUwcDNzcWpuaG92ZGRtayJ9.blQzt4ZlhFsr4HLThIj6ow'
+    accessToken: 'pk.eyJ1IjoibWF0cmd2IiwiYSI6ImNsaWlvd2c3bzAwYnkzcm9kNjNyeG9jbmUifQ.E99t5TTkElzNhxDSKvknMA'
 }).addTo(mymap);
 
 var currentFireMarkers = new Map();
