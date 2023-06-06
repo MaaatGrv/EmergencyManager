@@ -1,45 +1,65 @@
 /* On définis une couleur pour chaque caserne */
 
-.facility-icon-6 .fa-circle {
-    color: #ff0000; /* color for 6 */
+.facility-icon-31 ,
+.facility-icon-3929  {
+    color: #4287f5; /* color for 31 */
 }
 
-.facility-icon-31 .fa-circle {
-    color: #7f7f7f; /* color for 31 */
+.facility-icon-34 ,
+.facility-icon-3934  {
+    color: #f542d4; /* color for 34 */
 }
 
-.facility-icon-34 .fa-circle {
-    color: #7f007f; /* color for 34 */
+.facility-icon-35 , 
+.facility-icon-3918  {
+    color: #ff77ff; /* color for 35 */
 }
 
-.facility-icon-35 .fa-circle, .facility-icon-3918 .fa-circle {
-    color: #ff00ff; /* color for 35 */
+.facility-icon-36 ,
+.facility-icon-3923  {
+    color: #2a5cff; /* color for 36 */
 }
 
-.facility-icon-36 .fa-circle {
-    color: #0000ff; /* color for 36 */
-}
-
-.facility-icon-37 .fa-circle {
+.facility-icon-37 ,
+.facility-icon-3928  {
     color: #00ffff; /* color for 37 */
 }
 
-.facility-icon-38 .fa-circle {
-    color: #00ff00; /* color for 38 */
+.facility-icon-38 ,
+.facility-icon-3935  {
+    color: #00ff8c; /* color for 38 */
 }
 
-.facility-icon-39 .fa-circle {
-    color: #ffff00; /* color for 39 */
+.facility-icon-39 ,
+.facility-icon-3925  {
+    color: #fffb00; /* color for 39 */
 }
 
-.facility-icon-40 .fa-circle {
-    color: #ff7f00; /* color for 40 */
+.facility-icon-40 ,
+.facility-icon-3926  {
+    color: #ff8c00; /* color for 40 */
 }
 
-.facility-icon-3796 .fa-circle {
-    color: #7f00ff; /* color for 3796 */
+.facility-icon-3796 ,
+.facility-icon-3927  {
+    color: #9f42ff; /* color for 3796 */
 }
 
-.facility-icon-3797 .fa-circle {
-    color: #7f0000; /* color for 3797 */
+.facility-icon-3797 ,
+.facility-icon-3932  {
+    color: #ff4242; /* color for 3797 */
+}
+
+.fa-location-pin {
+    position: relative;
+    font-size: 30px; /* adjust as needed */
+}
+
+.fa-industry {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px; /* adjust as needed */
+    color: #ffffff; /* adjust as needed */
 }

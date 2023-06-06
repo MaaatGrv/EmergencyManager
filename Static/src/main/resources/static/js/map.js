@@ -27,10 +27,11 @@ async function displayFires() {
             marker.setLatLng(new L.LatLng(fire.lat, fire.lon));
         } else {
             let fireIcon = L.divIcon({
-                className: 'fire-icon-' + (fire.id).toString(), 
-                html: `<span class="fa-stack fa-lg">
-                            <i class="fa-solid fa-fire fa-2xl" style="color: #ff4000;"></i>
-                    </span>`,
+                className: 'fire-icon-' + (fire.type).toString(), 
+                html: `
+                    <i class="fa-solid fa-location-pin"></i>
+                    <i class="fa-solid fa-fire"></i>
+                    `,
                 iconSize: [25, 25],
             });
             marker = L.marker([fire.lat, fire.lon], {icon: fireIcon}).addTo(mymap);
@@ -65,10 +66,10 @@ async function displayFacilities() {
 
         let facilityIcon = L.divIcon({
             className: 'facility-icon-' + (facility.id).toString(), 
-            html: `<span class="fa-stack fa-lg">
-                      <i class="fas fa-circle fa-stack-2x"></i>
-                      <i class="fas fa-industry fa-stack-1x fa-inverse"></i>
-                   </span>`,
+            html: `
+                    <i class="fa-solid fa-location-pin"></i>
+                    <i class="fas fa-industry fa"></i>
+                `,
             iconSize: [25, 25],
         });
         marker = L.marker([facility.lat, facility.lon], {icon: facilityIcon, id: facility.id, name: cleanFacilityName}); 
@@ -76,6 +77,7 @@ async function displayFacilities() {
         let facilityInfoHtml = `
             <div id="facility-${facility.id}" class="facility-info">
                 <p>Name: ${cleanFacilityName}</p>
+                <p>id: ${facility.id}</p>
                 <p>Max Vehicle Space: ${facility.maxVehicleSpace}</p>
                 <p>People Capacity: ${facility.peopleCapacity}</p>
                 <p>Longitude: ${facility.lon}</p>

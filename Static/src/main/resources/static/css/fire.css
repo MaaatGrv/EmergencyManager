@@ -1,0 +1,43 @@
+/* Gamme de couleurs pastel pour les différents types de feux */
+
+.fire-icon-A {
+    color: #ff9999; /* color for type A (pastel red) */
+}
+
+.fire-icon-B_Gasoline {
+    color: #ffcc99; /* color for type B Gasoline (pastel orange) */
+}
+
+.fire-icon-B_Alcohol {
+    color: #ffd9b3; /* color for type B Alcohol (pastel peach) */
+}
+
+.fire-icon-B_Plastics {
+    color: #ffe6cc; /* color for type B Plastics (pastel light orange) */
+}
+
+.fire-icon-C_Flammable_Gases {
+    color: #fff2cc; /* color for type C Flammable Gases (pastel yellow) */
+}
+
+.fire-icon-D_Metals {
+    color: #e6ccff; /* color for type D Metals (pastel purple) */
+}
+
+.fire-icon-E_Electric {
+    color: #b3ccff; /* color for type E Electric (pastel blue) */
+}
+
+.fa-location-pin {
+    position: relative;
+    font-size: 30px; /* adjust as needed */
+}
+
+.fa-fire {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px; /* adjust as needed */
+    color: #ffffff; /* adjust as needed */
+}

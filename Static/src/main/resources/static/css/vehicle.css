@@ -1,47 +1,53 @@
-/* Styles for vehicle icons */
+/* On définis une couleur pour chaque caserne */
 
-.vehicle-icon-6  {
-    color: #ff0000; /* color for 6 */
+.vehicle-icon-31,
+.vehicle-icon-3929 {
+    color: #4287f5; /* color for 31 */
 }
 
-.vehicle-icon-31  {
-    color: #7f7f7f; /* color for 31 */
+.vehicle-icon-34 j,
+.vehicle-icon-3934 {
+    color: #f542d4; /* color for 34 */
 }
 
-.vehicle-icon-34  {
-    color: #7f007f; /* color for 34 */
+.vehicle-icon-35,
+.vehicle-icon-3918 {
+    color: #ff77ff; /* color for 35 */
 }
 
-.vehicle-icon-35, .vehicle-icon-3918  {
-    color: #ff00ff; /* color for 35 */
+.vehicle-icon-36,
+.vehicle-icon-3923 {
+    color: #2a5cff; /* color for 36 */
 }
 
-.vehicle-icon-36  {
-    color: #0000ff; /* color for 36 */
-}
-
-.vehicle-icon-37  {
+.vehicle-icon-37,
+.vehicle-icon-3928 {
     color: #00ffff; /* color for 37 */
 }
 
-.vehicle-icon-38  {
-    color: #00ff00; /* color for 38 */
+.vehicle-icon-38,
+.vehicle-icon-3935 {
+    color: #00ff8c; /* color for 38 */
 }
 
-.vehicle-icon-39  {
-    color: #ffff00; /* color for 39 */
+.vehicle-icon-39,
+.vehicle-icon-3925 {
+    color: #fffb00; /* color for 39 */
 }
 
-.vehicle-icon-40  {
-    color: #ff7f00; /* color for 40 */
+.vehicle-icon-40,
+.vehicle-icon-3926 {
+    color: #ff8c00; /* color for 40 */
 }
 
-.vehicle-icon-3796  {
-    color: #7f00ff; /* color for 3796 */
+.vehicle-icon-3796,
+.vehicle-icon-3927 {
+    color: #9f42ff; /* color for 3796 */
 }
 
-.vehicle-icon-3797  {
-    color: #7f0000; /* color for 3797 */
+.vehicle-icon-3797,
+.vehicle-icon-3932 {
+    color: #ff4242; /* color for 3797 */
 }
 
 .fa-location-pin {
