@@ -10,11 +10,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.firefighter.emergency.dto.VehicleDto;
+import com.fasterxml.jackson.databind.ser.impl.FilteredBeanPropertyWriter;
 import com.firefighter.emergency.dto.Coord;
 import com.firefighter.emergency.dto.FacilityDto;
 import com.firefighter.emergency.dto.FireDto;
 import com.firefighter.emergency.dto.LiquidType;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -28,6 +30,7 @@ public class FireManager {
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(10); // Créez un pool de
                                                                                                    // threads avec 10
                                                                                                    // threads
+    private ConcurrentHashMap<String, Double> distanceCache = new ConcurrentHashMap<>();
 
     public FireManager(EmergencyService emergencyService, MapBoxService mapboxService,
             ScheduledExecutorService executorService) {
@@ -35,7 +38,7 @@ public class FireManager {
         this.mapboxService = mapboxService;
     }
 
-    @Scheduled(fixedRate = 60000) // Run every 30 seconds
+    @Scheduled(fixedRate = 10000) // Run every 60 seconds
     public void handleFires() {
         List<FireDto> fires = emergencyService.getAllFires();
         List<VehicleDto> vehicles = emergencyService.getAllVehicles();
@@ -63,19 +66,8 @@ public class FireManager {
             refillVehicle(vehicle, unhandledFires);
 
             synchronized (unhandledFires) {
-                FireDto bestFire = null;
-                double bestScore = Double.NEGATIVE_INFINITY;
-                for (FireDto fire : unhandledFires) {
-                    double score = calculateScore(vehicle, fire);
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestFire = fire;
-                    }
-                }
 
-                if (bestFire == null) {
-                    return;
-                }
+                FireDto bestFire = FindBestFire(vehicle, unhandledFires);
 
                 emergencyService.moveVehicleUniformly(vehicle.getId(), bestFire.getCoord());
                 unhandledFires.remove(bestFire);
@@ -85,32 +77,43 @@ public class FireManager {
             for (FacilityDto facility : facilities) {
                 double epsilon = 0.00001;
                 if (Math.abs(vehicle.getCoord().getLat() - facility.getLat()) < epsilon
-                        && Math.abs(vehicle.getCoord().getLon() - facility.getLon()) < epsilon
-                        && vehicle.getLiquidQuantity() == vehicle.getType().getLiquidCapacity()) {
+                        && Math.abs(vehicle.getCoord().getLon() - facility.getLon()) < epsilon) {
+                    if (vehicle.getLiquidQuantity() == vehicle.getType().getLiquidCapacity()) {
+                        synchronized (unhandledFires) {
 
-                    synchronized (unhandledFires) {
-                        FireDto bestFire = null;
-                        double bestScore = Double.NEGATIVE_INFINITY;
-                        for (FireDto fire : unhandledFires) {
-                            double score = calculateScore(vehicle, fire);
-                            if (score > bestScore) {
-                                bestScore = score;
-                                bestFire = fire;
-                            }
+                            FireDto bestFire = FindBestFire(vehicle, unhandledFires);
+
+                            emergencyService.moveVehicleUniformly(vehicle.getId(), bestFire.getCoord());
+                            unhandledFires.remove(bestFire);
+                            System.out.println("Vehicle " + vehicle.getId() + " is handling fire " + bestFire.getId());
                         }
+                    } else {
+                        refillVehicle(vehicle, unhandledFires);
+                        synchronized (unhandledFires) {
 
-                        if (bestFire == null) {
-                            return;
+                            FireDto bestFire = FindBestFire(vehicle, unhandledFires);
+
+                            emergencyService.moveVehicleUniformly(vehicle.getId(), bestFire.getCoord());
+                            unhandledFires.remove(bestFire);
+                            System.out.println("Vehicle " + vehicle.getId() + " is handling fire " + bestFire.getId());
                         }
-
-                        emergencyService.moveVehicleUniformly(vehicle.getId(), bestFire.getCoord());
-                        unhandledFires.remove(bestFire);
-                        System.out.println("Vehicle " + vehicle.getId() + " is handling fire " + bestFire.getId());
                     }
                 }
             }
-
         }
+    }
+
+    private FireDto FindBestFire(VehicleDto vehicle, List<FireDto> unhandledFires) {
+        FireDto bestFire = null;
+        double bestScore = Double.NEGATIVE_INFINITY;
+        for (FireDto fire : unhandledFires) {
+            double score = calculateScore(vehicle, fire);
+            if (score > bestScore) {
+                bestScore = score;
+                bestFire = fire;
+            }
+        }
+        return bestFire;
     }
 
     private void refillVehicle(VehicleDto vehicle, List<FireDto> unhandledFires) {
