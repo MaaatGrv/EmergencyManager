@@ -34,8 +34,8 @@ public class EmergencyService {
         return emergencyClient.getAllFires();
     }
 
-    public List<VehicleDto> getAllVehicles() {
-        return emergencyClient.getAllVehicles();
+    public List<VehicleDto> getTeamVehicles() {
+        return emergencyClient.getTeamVehicles();
     }
 
     public VehicleDto moveVehicle(Integer vehicleId, Coord coord) {
@@ -84,8 +84,12 @@ public class EmergencyService {
         return facilities;
     }
 
-    public List<VehicleDto> getOtherVehicles() {
-        List<VehicleDto> vehicles = emergencyClient.getOtherVehicles();
+    public List<FacilityDto> getAllFacilities() {
+        return emergencyClient.getAllFacilities();
+    }
+
+    public List<VehicleDto> getAllVehicles() {
+        List<VehicleDto> vehicles = emergencyClient.getAllVehicles();
         // The vehicles can not have facilityRefId 35 or 3918
         vehicles.removeIf(vehicle -> vehicle.getFacilityRefID() == 35 || vehicle.getFacilityRefID() == 3918);
         return vehicles;

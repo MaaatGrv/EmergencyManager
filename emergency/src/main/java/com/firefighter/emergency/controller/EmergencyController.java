@@ -14,11 +14,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+@CrossOrigin(origins = "http://localhost:8081")
 @RestController
 @RequestMapping("/emergency")
 public class EmergencyController {
@@ -31,6 +33,11 @@ public class EmergencyController {
         return emergencyService.getAllFires();
     }
 
+    @GetMapping("/vehicles/team")
+    public List<VehicleDto> getTeamVehicles() {
+        return emergencyService.getTeamVehicles();
+    }
+
     @GetMapping("/vehicles")
     public List<VehicleDto> getAllVehicles() {
         return emergencyService.getAllVehicles();
@@ -41,9 +48,14 @@ public class EmergencyController {
         return emergencyService.moveVehicle(id, coord);
     }
 
+    @GetMapping("/facilities/team")
+    public List<FacilityDto> getTeamFacilities() {
+        return emergencyService.getTeamFacilities();
+    }
+
     @GetMapping("/facilities")
     public List<FacilityDto> getAllFacilities() {
-        return emergencyService.getTeamFacilities();
+        return emergencyService.getAllFacilities();
     }
 
     @PutMapping("vehicle/update/{id}")

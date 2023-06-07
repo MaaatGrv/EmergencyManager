@@ -16,7 +16,7 @@ var currentFireMarkers = new Map();
 var currentVehicleMarkers = new Map();
 
 async function displayFires() {
-    const response = await fetch('http://vps.cpe-sn.fr:8081/fires');
+    const response = await fetch('http://localhost:8083/emergency/fire');
     const fires = await response.json();
 
     const newFireMarkers = new Map();
@@ -57,7 +57,7 @@ async function displayFires() {
 }
 
 async function displayFacilities() {
-    const response = await fetch('http://vps.cpe-sn.fr:8081/facility');
+    const response = await fetch('http://localhost:8083/emergency/facilities');
     const facilities = await response.json();
     let facilitiesSet = new Set();
     for (const facility of facilities) {
@@ -101,7 +101,7 @@ async function displayFacilities() {
 var selectedFacilityId = 'all'; // Nouvelle variable pour suivre l'id de la facility sélectionnée
 
 async function displayVehicles() {
-    const response = await fetch('http://vps.cpe-sn.fr:8081/vehicles');
+    const response = await fetch('http://localhost:8083/emergency/vehicles');
     const vehicles = await response.json();
 
     const newVehicleMarkers = new Map();

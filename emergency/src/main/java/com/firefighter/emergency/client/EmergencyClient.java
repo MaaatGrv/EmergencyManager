@@ -47,7 +47,7 @@ public class EmergencyClient {
         return response.getBody();
     }
 
-    public List<VehicleDto> getAllVehicles() {
+    public List<VehicleDto> getTeamVehicles() {
         ResponseEntity<List<VehicleDto>> response = restTemplate.exchange(
                 API_URL + "/vehiclebyteam/" + TeamKey,
                 HttpMethod.GET,
@@ -57,7 +57,7 @@ public class EmergencyClient {
         return response.getBody();
     }
 
-    public List<VehicleDto> getOtherVehicles() {
+    public List<VehicleDto> getAllVehicles() {
         ResponseEntity<List<VehicleDto>> response = restTemplate.exchange(
                 API_URL + "/vehicles",
                 HttpMethod.GET,

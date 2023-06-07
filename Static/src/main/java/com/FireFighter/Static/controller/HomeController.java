@@ -16,4 +16,9 @@ public class HomeController {
         return "map";
     }
 
+    @GetMapping("/manager")
+    public String manager() {
+        return "manager";
+    }
+
 }
