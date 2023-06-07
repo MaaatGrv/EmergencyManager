@@ -96,7 +96,7 @@ public class EmergencyClient {
         return null;
     }
 
-    private FacilityDto getFacilityById(Integer facilityId) {
+    public FacilityDto getFacilityById(Integer facilityId) {
         List<FacilityDto> facilities = this.getAllFacilities();
         for (FacilityDto facility : facilities) {
             if (facility.getId().equals(facilityId)) {

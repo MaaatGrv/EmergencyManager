@@ -1,12 +1,14 @@
 package com.firefighter.emergency.service;
 
 import com.firefighter.emergency.client.EmergencyClient;
+import com.firefighter.emergency.dto.Compteur;
 import com.firefighter.emergency.dto.Coord;
 import com.firefighter.emergency.dto.FacilityDto;
 import com.firefighter.emergency.dto.FireDto;
 import com.firefighter.emergency.dto.LiquidType;
 import com.firefighter.emergency.dto.VehicleDto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -24,7 +26,7 @@ public class EmergencyService {
 
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(10);
     private static final long MOVE_INTERVAL_MS = 100;
-    private double speed = 10;
+    private double speed = 30;
 
     public EmergencyService(EmergencyClient emergencyClient) {
         this.emergencyClient = emergencyClient;
@@ -59,8 +61,6 @@ public class EmergencyService {
         double deltaLat = (targetCoord.getLat() - currentCoord.getLat()) / steps;
         double deltaLon = (targetCoord.getLon() - currentCoord.getLon()) / steps;
 
-        System.out.println("Moving vehicle " + vehicleId + " to " + targetCoord + " in " + steps + " steps");
-
         executorService.scheduleAtFixedRate(() -> {
             // Update the current position
             currentCoord.setLat(currentCoord.getLat() + deltaLat);
@@ -77,6 +77,70 @@ public class EmergencyService {
         }, 0, MOVE_INTERVAL_MS, TimeUnit.MILLISECONDS);
     }
 
+    public void moveVehicleReal(Integer vehicleId, Coord targetCoord) {
+        // Get the current position of the vehicle
+        VehicleDto vehicle = getVehicleById(vehicleId);
+
+        Coord currentCoord = new Coord();
+        currentCoord.setLat(vehicle.getLat());
+        currentCoord.setLon(vehicle.getLon());
+
+        // Calculate the way
+        List<Coord> chemin = mapboxService.getRoute(currentCoord, targetCoord);
+        chemin.add(targetCoord);
+
+        // Calculate all step
+        double distancestep = (vehicle.getType().getMaxSpeed() * 10) * 1000 / 36000;
+
+        List<Coord> etapes = divideRouteIntoSegments2(chemin, distancestep);
+        int taille = etapes.size();
+        Compteur i = new Compteur(0);
+        executorService.scheduleAtFixedRate(() -> {
+            // Update the current position
+
+            int indice = i.getValeur();
+            // Move the vehicle to the new position
+            emergencyClient.moveVehicle(vehicleId, etapes.get(indice));
+
+            indice += 1;
+            i.setValeur(indice);
+
+            // Check if the vehicle has reached its destination
+            if (indice >= taille) {
+                // If the vehicle has reached its destination, cancel the task
+                throw new RuntimeException("Destination reached");
+            }
+        }, 0, MOVE_INTERVAL_MS, TimeUnit.MILLISECONDS);
+    }
+
+    public List<Coord> divideRouteIntoSegments2(List<Coord> route, double distbystep) {
+
+        List<Coord> segments = new ArrayList<>();
+
+        for (int i = 0; i < route.size() - 1; i++) {
+            Coord start = route.get(i);
+            Coord end = route.get(i + 1);
+
+            double remainingLength = mapboxService.getDistance(start, end);
+
+            int steps = (int) Math.floor(remainingLength / distbystep);
+
+            double deltalat = (end.getLat() - start.getLat()) / steps;
+            double deltalon = (end.getLon() - start.getLon()) / steps;
+
+            for (int i1 = 0; i1 <= steps; i1++) {
+
+                Coord newCoord = new Coord();
+                newCoord.setLat(start.getLat() + deltalat);
+                newCoord.setLon(start.getLon() + deltalon);
+                segments.add(newCoord);
+                start = newCoord;
+            }
+            segments.add(end);
+        }
+        return segments;
+    }
+
     public List<FacilityDto> getTeamFacilities() {
         List<FacilityDto> facilities = emergencyClient.getAllFacilities();
         // Get facilities with the id 35 or 3918
@@ -90,8 +154,6 @@ public class EmergencyService {
 
     public List<VehicleDto> getAllVehicles() {
         List<VehicleDto> vehicles = emergencyClient.getAllVehicles();
-        // The vehicles can not have facilityRefId 35 or 3918
-        vehicles.removeIf(vehicle -> vehicle.getFacilityRefID() == 35 || vehicle.getFacilityRefID() == 3918);
         return vehicles;
     }
 
@@ -117,6 +179,10 @@ public class EmergencyService {
                 moveVehicle(vehicle.getId(), facility.getCoord());
             }
         }
+    }
+
+    public FacilityDto getFacilityById(Integer id) {
+        return emergencyClient.getFacilityById(id);
     }
 
 }
