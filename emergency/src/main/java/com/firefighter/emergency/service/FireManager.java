@@ -49,6 +49,11 @@ public class FireManager {
 
         for (VehicleDto vehicle : vehicles) {
             executorService.submit(() -> handleVehicle(vehicle, fires, facilities));
+            // si le véhicule n'est associé à aucun feu
+            if (!vehicleFireMap.containsKey(vehicle.getId())) {
+                // trouver le feu le plus approprié et l'associer au véhicule
+                handleFire(vehicle, fires);
+            }
         }
     }
 
@@ -58,28 +63,26 @@ public class FireManager {
         if (vehicle.getLiquidQuantity() == 0) {
             FacilityDto nearestFacility = findNearestFacility(vehicle, facilities);
             Coord facilityCoord = nearestFacility.getCoord();
-            if (!vehiclePositions.containsValue(facilityCoord)) {
-                vehiclePositions.put(vehicle.getId(), facilityCoord);
-                emergencyService.moveVehicleUniformly(vehicle.getId(), facilityCoord);
-                refillVehicle(vehicle, unhandledFires);
-            }
-
+            vehiclePositions.put(vehicle.getId(), facilityCoord);
+            emergencyService.moveVehicleReal(vehicle.getId(), facilityCoord);
+            refillVehicle(vehicle, unhandledFires);
             handleFire(vehicle, unhandledFires);
         } else {
-            if (!isFireHere(vehicle, unhandledFires) && (vehicleFireMap.containsKey(vehicle.getId()))) {
-                vehicleFireMap.remove(vehicle.getId());
+            if (!isFireHere(vehicle, unhandledFires)) {
+                if (vehicleFireMap.containsKey(vehicle.getId())) {
+                    vehicleFireMap.remove(vehicle.getId());
+                }
                 handleFire(vehicle, unhandledFires);
             }
+
             for (FacilityDto facility : facilities) {
                 double epsilon = 0.00001;
                 if (Math.abs(vehicle.getCoord().getLat() - facility.getLat()) < epsilon
                         && Math.abs(vehicle.getCoord().getLon() - facility.getLon()) < epsilon) {
-                    if (vehicle.getLiquidQuantity() > vehicle.getType().getLiquidCapacity() - 2) {
-                        handleFire(vehicle, unhandledFires);
-                    } else {
+                    if (vehicle.getLiquidQuantity() < vehicle.getType().getLiquidCapacity() - 2) {
                         refillVehicle(vehicle, unhandledFires);
-                        handleFire(vehicle, unhandledFires);
                     }
+                    handleFire(vehicle, unhandledFires);
                 }
             }
         }
@@ -87,19 +90,20 @@ public class FireManager {
 
     private void handleFire(VehicleDto vehicle, List<FireDto> unhandledFires) {
         FireDto bestFire;
-        Coord bestFireCoord;
+        Coord bestFireCoord = null;
         do {
             bestFire = FindBestFire(vehicle, unhandledFires);
-            bestFireCoord = bestFire.getCoord();
-            if (bestFire != null)
+            if (bestFire != null) {
+                bestFireCoord = bestFire.getCoord();
                 unhandledFires.remove(bestFire);
-        } while (vehiclePositions.containsValue(bestFireCoord) && bestFire != null);
+            }
+        } while (bestFire != null && vehiclePositions.containsValue(bestFireCoord));
 
         if (bestFire != null) {
             vehicleFireMap.put(vehicle.getId(), bestFire.getId());
             fireVehicleMap.put(bestFire.getId(), vehicle.getId());
-            vehiclePositions.put(vehicle.getId(), bestFireCoord);
-            emergencyService.moveVehicleUniformly(vehicle.getId(), bestFireCoord);
+            vehiclePositions.put(vehicle.getId(), bestFire.getCoord());
+            emergencyService.moveVehicleReal(vehicle.getId(), bestFire.getCoord());
         }
     }
 
@@ -211,12 +215,21 @@ public class FireManager {
     }
 
     private double computeFireImportance(FireDto fire) {
-        // This method should return a score representing the importance of putting out
-        // this fire.
-        // This could be based on factors like the fire's size, intensity, and proximity
-        // to populated areas.
-        // For now, let's just return 1, treating all fires as equally important.
-        return 1;
+        double efficiency = 0;
+        switch (fire.getType()) {
+            case "B_Alcohol":
+            case "B_Plastics":
+            case "B_Gasoline":
+                efficiency = 1.5;
+                break;
+            case "E_Electrical":
+                efficiency = 0.75;
+                break;
+            default:
+                efficiency = 1;
+                break;
+        }
+        return efficiency;
     }
 
     private FacilityDto findNearestFacility(VehicleDto vehicle, List<FacilityDto> facilities) {

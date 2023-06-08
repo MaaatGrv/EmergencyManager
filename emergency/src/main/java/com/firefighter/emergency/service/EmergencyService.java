@@ -8,6 +8,8 @@ import com.firefighter.emergency.dto.FireDto;
 import com.firefighter.emergency.dto.LiquidType;
 import com.firefighter.emergency.dto.VehicleDto;
 
+import jakarta.annotation.PostConstruct;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +28,7 @@ public class EmergencyService {
 
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(10);
     private static final long MOVE_INTERVAL_MS = 100;
-    private double speed = 30;
+    private double speed = 100;
 
     public EmergencyService(EmergencyClient emergencyClient) {
         this.emergencyClient = emergencyClient;
@@ -45,6 +47,7 @@ public class EmergencyService {
     }
 
     public void moveVehicleUniformly(Integer vehicleId, Coord targetCoord) {
+        System.out.println("vehcle id : " + vehicleId + "target coord : " + targetCoord);
         // Get the current position of the vehicle
         VehicleDto vehicle = getVehicleById(vehicleId);
         Coord currentCoord = new Coord();
@@ -90,7 +93,7 @@ public class EmergencyService {
         chemin.add(targetCoord);
 
         // Calculate all step
-        double distancestep = (vehicle.getType().getMaxSpeed() * 10) * 1000 / 36000;
+        double distancestep = (vehicle.getType().getMaxSpeed()) * 10000 / 36000;
 
         List<Coord> etapes = divideRouteIntoSegments2(chemin, distancestep);
         int taille = etapes.size();
@@ -106,7 +109,7 @@ public class EmergencyService {
             i.setValeur(indice);
 
             // Check if the vehicle has reached its destination
-            if (indice >= taille) {
+            if (indice > taille) {
                 // If the vehicle has reached its destination, cancel the task
                 throw new RuntimeException("Destination reached");
             }
@@ -165,19 +168,21 @@ public class EmergencyService {
         return emergencyClient.getVehicleById(id);
     }
 
+    @PostConstruct
     public void initializeVehiclesInFacilities() {
-        List<VehicleDto> vehicles = getAllVehicles();
+        List<VehicleDto> vehicles = getTeamVehicles();
         List<FacilityDto> facilities = getTeamFacilities();
 
-        for (VehicleDto vehicle : vehicles) {
-            FacilityDto facility = facilities.stream()
-                    .filter(f -> f.getId().equals(vehicle.getFacilityRefID()))
-                    .findFirst()
-                    .orElse(null);
+        if (facilities.isEmpty()) {
+            throw new IllegalStateException("No facilities available for initialization");
+        }
 
-            if (facility != null) {
-                moveVehicle(vehicle.getId(), facility.getCoord());
-            }
+        for (int i = 0; i < vehicles.size(); i++) {
+            VehicleDto vehicle = vehicles.get(i);
+            // Get the facility :
+            FacilityDto facility = getFacilityById(vehicle.getFacilityRefID());
+            // Move vehicle to the facility location
+            moveVehicle(vehicle.getId(), facility.getCoord());
         }
     }
 
