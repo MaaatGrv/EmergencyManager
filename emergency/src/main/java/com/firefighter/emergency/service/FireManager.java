@@ -1,20 +1,12 @@
 package com.firefighter.emergency.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.firefighter.emergency.dto.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.firefighter.emergency.dto.VehicleDto;
 import com.fasterxml.jackson.databind.ser.impl.FilteredBeanPropertyWriter;
-import com.firefighter.emergency.dto.Coord;
-import com.firefighter.emergency.dto.FacilityDto;
-import com.firefighter.emergency.dto.FireDto;
-import com.firefighter.emergency.dto.LiquidType;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -123,20 +115,64 @@ public class FireManager {
 
     private FireDto FindBestFire(VehicleDto vehicle, List<FireDto> unhandledFires) {
         FireDto bestFire = null;
+        FireDto bestFire2 = null;
         double bestScore = Double.NEGATIVE_INFINITY;
+        double bestScore2 = Double.NEGATIVE_INFINITY;
+        LiquidType liquidMostNeeded = determineMostNeededLiquidType(unhandledFires, vehicle);
+        Map<FireType, LiquidType> mapOfBestLiquid=findTheBestTypeofLiquidForAllTypeOfFire();
+        List<FireType> bestFiretoHandle=new ArrayList<>();
+        for (LiquidType liquidType : mapOfBestLiquid.values()){
+            if(liquidType==liquidMostNeeded){
+                addBestFireToMap( mapOfBestLiquid, bestFiretoHandle,liquidType);
+            }
+        }
         for (FireDto fire : unhandledFires) {
             if (fireVehicleMap.containsKey(fire.getId())) {
                 continue;
             }
             double score = calculateScore(vehicle, fire);
-            if (score > bestScore) {
-                bestScore = score;
-                bestFire = fire;
+            if (score > bestScore2) {
+                bestScore2 = score;
+                bestFire2 = fire;
             }
+            for(FireType fireType : bestFiretoHandle){
+                if(fire.getType().equals(fireType)){
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestFire = fire;
+                    }
+                }
+            }
+        }
+        if (bestFire == null) {
+            bestFire=bestFire2;
         }
         return bestFire;
     }
 
+    private void addBestFireToMap(Map<FireType, LiquidType> bestLiquidForFire, List<FireType> bestFireToHandle,LiquidType liquidType){
+        for (Map.Entry<FireType, LiquidType> entry : bestLiquidForFire.entrySet()) {
+            if (Objects.equals(liquidType, entry.getValue())) {
+                bestFireToHandle.add(entry.getKey());
+            }
+        }
+    }
+    private Map<FireType, LiquidType> findTheBestTypeofLiquidForAllTypeOfFire(){
+        Map<FireType, LiquidType> theMostEfficiencyLiquidForFireTypes = new HashMap<>();
+        for(FireType fireType : FireType.values()){
+            LiquidType bestLiquid=null;
+            float bestTest=0;
+            for(LiquidType liquid : LiquidType.values()){
+                float test= liquid.getEfficiency(fireType.name());
+                if(test>bestTest){
+                    bestTest=test;
+                    bestLiquid=liquid;
+                }
+            }
+            theMostEfficiencyLiquidForFireTypes.put(fireType, bestLiquid);
+        }
+        return theMostEfficiencyLiquidForFireTypes;
+    }
     private void refillVehicle(VehicleDto vehicle, List<FireDto> unhandledFires) {
         Future<?> future = executorService.scheduleAtFixedRate(() -> {
             VehicleDto updatedVehicle = emergencyService.getVehicleById(vehicle.getId());
