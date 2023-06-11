@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Emergency Manager</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.3.1/mapbox-gl.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="../static/css/map.css" />
+    <link rel="stylesheet" href="../static/css/facility.css" />
+    <link rel="stylesheet" href="../static/css/vehicle.css" />
+    <link rel="stylesheet" href="../static/css/fire.css" />
+    <link rel="stylesheet" href="../static/css/home.css" />
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>Emergency Manager</h1>
+            <div id="logo">
+                <i class="fa-solid fa-fire-extinguisher fa-l"></i>
+            </div>
+            <div id="menu">
+                <ul>
+                    <li><a href="http://localhost:8081/">Accueil</a></li>
+                    <li><a href="http://localhost:8081/infos">Infos</a></li>
+                    <li><a href="http://localhost:8081/manager">Manager</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <div id="mapid">
+            <!-- Sidebar for layer visibility -->
+            <div id="layer-toggle" class="collapsed" style="position: absolute; bottom: 10px; right: 10px; z-index: 1000; padding: 10px; background: white;">
+                <button id="toggle-button" style="position: absolute; top: 2%; left: 2%;">x</button>
+                <div>
+                    <input type="checkbox" id="fire-toggle" checked>
+                    <label for="fire-toggle">Show Fires</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="facility-toggle" checked>
+                    <label for="facility-toggle">Show Facilities</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="vehicle-toggle" checked>
+                    <label for="vehicle-toggle">Show Vehicles</label>
+                </div>
+                <div id="filters">
+                    <div id="facility-filter">
+                        <label for="facility-select">Filter by Facility:</label>
+                        <select id="facility-select">
+                            <option value="all">All</option>
+                        </select>
+                    </div>
+                </div>        
+            </div>
+        </div>
+    </main>
+    <script src="../static/js/map.js"></script>
+    <script src="../static/js/home.js"></script>
+    <script src="https://kit.fontawesome.com/ca19a942ce.js" crossorigin="anonymous"></script>
+</body>
+</html>
