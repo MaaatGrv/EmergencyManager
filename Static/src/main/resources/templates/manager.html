@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Emergency Manager - Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="../static/css/manager.css" />
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>Emergency Manager - Manager</h1>
+            <div id="logo">
+                <i class="fa-solid fa-fire-extinguisher fa-l"></i>
+            </div>
+            <div id="menu">
+                <ul>
+                    <li><a href="http://localhost:8081/">Accueil</a></li>
+                    <li><a href="http://localhost:8081/infos">Infos</a></li>
+                    <li><a href="http://localhost:8081/manager">Manager</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    <main>
+        <form id="vehicle-form">
+            <label for="crew-member">Crew Member:</label>
+            <input type="number" id="crew-member" name="crew-member" required>
+
+            <label for="facility-ref-id">Facility Ref ID:</label>
+            <select id="facility-ref-id" name="facility-ref-id" required>
+                <option value="35">35</option>
+                <option value="3918">3918</option>
+            </select>
+
+            <label for="liquid-type">Liquid Type:</label>
+            <select id="liquid-type" name="liquid-type" required>
+                <option value="ALL">All</option>
+                <option value="WATER">Water</option>
+                <option value="POWDER">Powder</option>
+                <option value="SPECIAL_POWDER">Special Powder</option>
+                <option value="CARBON_DIOXIDE">Carbon Dioxide</option>
+                <option value="FOAM">Foam</option>
+            </select>
+
+            <label for="vehicle-type">Vehicle Type:</label>
+            <select id="vehicle-type" name="vehicle-type" required>
+                <option value="CAR">Car</option>
+                <option value="FIRE_ENGINE">Fire Engine</option>
+                <option value="PUMPER_TRUCK">Pumper Truck</option>
+                <option value="WATER_TENDERS">Water Tenders</option>
+                <option value="TURNTABLE_LADDER_TRUCK">Turntable Ladder Truck</option>
+                <option value="TRUCK">Truck</option>
+            </select>
+
+            <button type="submit">Create Vehicle</button>
+        </form>
+    </main>
+    <script src="../static/js/manager.js"></script>
+    <script src="https://kit.fontawesome.com/ca19a942ce.js" crossorigin="anonymous"></script>
+</body>
+</html>

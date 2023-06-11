@@ -190,4 +190,12 @@ public class EmergencyService {
         return emergencyClient.getFacilityById(id);
     }
 
+    public void deleteVehicle(Integer id) {
+        emergencyClient.deleteVehicle(id);
+    }
+
+    public VehicleDto createVehicle(VehicleDto vehicleDto) {
+        return emergencyClient.createVehicle(vehicleDto);
+    }
+
 }

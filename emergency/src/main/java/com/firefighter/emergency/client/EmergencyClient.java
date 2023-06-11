@@ -122,4 +122,23 @@ public class EmergencyClient {
         return null;
     }
 
+    public void deleteVehicle(Integer vehicleId) {
+        ResponseEntity<Void> response = restTemplate.exchange(
+                API_URL + "/vehicle/" + TeamKey + "/" + vehicleId,
+                HttpMethod.DELETE,
+                null,
+                new ParameterizedTypeReference<Void>() {
+                });
+    }
+
+    public VehicleDto createVehicle(VehicleDto vehicleDto) {
+        HttpEntity<VehicleDto> request = new HttpEntity<>(vehicleDto);
+        ResponseEntity<VehicleDto> response = restTemplate.exchange(
+                API_URL + "/vehicle/" + TeamKey,
+                HttpMethod.POST,
+                request,
+                new ParameterizedTypeReference<VehicleDto>() {
+                });
+        return response.getBody();
+    }
 }
