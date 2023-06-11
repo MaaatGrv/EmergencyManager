@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.firefighter.emergency.dto.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.firefighter.emergency.dto.VehicleDto;
 import com.fasterxml.jackson.databind.ser.impl.FilteredBeanPropertyWriter;
 import com.firefighter.emergency.dto.Coord;
 import com.firefighter.emergency.dto.FacilityDto;
@@ -153,6 +153,9 @@ public class FireManager {
                     }
                 }
             }
+        }
+        if (bestFire == null) {
+            bestFire = bestFire2;
         }
         if (bestFire == null) {
             bestFire = bestFire2;
